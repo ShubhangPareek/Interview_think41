@@ -74,6 +74,7 @@ def get_department_products(id):
         "products": products
     })
 
+
 # Start server
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(use_reloader=False)
