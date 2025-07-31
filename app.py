@@ -16,7 +16,12 @@ cursor = conn.cursor(dictionary=True)
 # GET all products
 @app.route('/api/products', methods=['GET'])
 def get_all_products():
-    cursor.execute("SELECT * FROM products LIMIT 100")
+    cursor.execute("""
+    SELECT p.id, p.name, p.brand, p.retail_price, d.name AS department
+    FROM products p
+    JOIN departments d ON p.department_id = d.id
+    LIMIT 100
+""")
     products = cursor.fetchall()
     return jsonify(products), 200
 
