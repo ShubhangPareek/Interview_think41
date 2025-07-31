@@ -25,6 +25,19 @@ def get_all_products():
     products = cursor.fetchall()
     return jsonify(products), 200
 
+@app.route('/api/departments', methods=['GET'])
+def get_departments():
+    cursor = conn.cursor(dictionary=True)
+    query = '''
+        SELECT d.id, d.name, COUNT(p.id) AS product_count
+        FROM departments d
+        LEFT JOIN products p ON d.id = p.department_id
+        GROUP BY d.id
+    '''
+    cursor.execute(query)
+    departments = cursor.fetchall()
+    return jsonify({"departments": departments})
+
 # GET product by ID
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 def get_product_by_id(product_id):
@@ -34,6 +47,32 @@ def get_product_by_id(product_id):
         return jsonify(product), 200
     else:
         return jsonify({"error": "Product not found"}), 404
+    
+@app.route('/api/departments/<int:id>', methods=['GET'])
+def get_department(id):
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM departments WHERE id = %s', (id,))
+    department = cursor.fetchone()
+    if not department:
+        return jsonify({"error": "Department not found"}), 404
+    return jsonify(department)
+
+@app.route('/api/departments/<int:id>/products', methods=['GET'])
+def get_department_products(id):
+    cursor = conn.cursor(dictionary=True)
+    # Validate department exists
+    cursor.execute('SELECT name FROM departments WHERE id = %s', (id,))
+    department = cursor.fetchone()
+    if not department:
+        return jsonify({"error": "Department not found"}), 404
+
+    # Get products
+    cursor.execute('SELECT * FROM products WHERE department_id = %s', (id,))
+    products = cursor.fetchall()
+    return jsonify({
+        "department": department["name"],
+        "products": products
+    })
 
 # Start server
 if __name__ == '__main__':
